@@ -297,3 +297,95 @@ def buildRocs(varlist, scan_targets, labels, ylabels, data):
                 rocs[target_label + label] = {'x': x, 'y': y}
 
     return rocs
+
+def rejectionAtEfficiency(rocs, eff = 0.95):
+    for roc in rocs:
+        x = rocs[roc]['x']
+        y = rocs[roc]['y']
+
+        thresh_index = next(val_y[0] for val_y in enumerate(y) if val_y[1] > eff)
+
+        # print(thresh_index)
+        # print(x[thresh_index])
+        print(roc, 1/x[thresh_index])
+
+
+def rocScanSingle(varlist, scan_targets, labels, ylabels, data, plotpath='',
+            x_min=0., x_max=1.0, y_min=0.0, y_max=1.0, x_log=False, y_log=False, rejection=False,
+            x_label='False positive rate', y_label='True positive rate',
+            linestyles=[], colorgrouping=-1,
+            extra_lines=[],
+            atlas_x=-1, atlas_y=-1, simulation=False,
+            textlist=[]):
+    '''
+    Creates a set of ROC curve plots by scanning over the specified variables.
+    One set is created for each target (neural net score dataset).
+    
+    varlist: a list of rocVar instances to scan over
+    scan_targets: a list of neural net score datasets to use
+    labels: a list of target names (strings); must be the same length as scan_targets
+    '''
+
+    rocs = buildRocs(varlist, scan_targets, labels, ylabels, data)
+
+    # prepare matplotlib figure
+    plt.cla()
+    plt.clf()
+    fig = plt.figure()
+    fig.patch.set_facecolor('white')
+    plt.plot([0, 1], [0, 1], 'k--')
+
+    colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+
+    i = 0
+    lines = []
+    for target_label in labels:
+        for v in varlist:
+            labels = v.labels
+            for label in v.labels:
+
+                if len(linestyles) > 0:
+                    linestyle = linestyles[int(np.floor(i / len(v.labels)))]
+                else:
+                    linestyle = 'solid'
+                if colorgrouping > 0:
+                    color = colors[i % (len(v.labels))]
+                else:
+                    color = colors[i]
+
+                # first generate ROC curve
+                x = rocs[target_label+label]['x']
+                y = rocs[target_label+label]['y']
+                if not rejection:
+
+                    line, = plt.plot(x, y, linestyle=linestyle, color = color)
+                else:
+                    line, = plt.plot(y, 1. / x, linestyle=linestyle, color=color)
+                
+                if i < len(v.labels):
+                    lines.append(line)
+
+                i += 1
+
+                #  label=label
+                #label=label
+
+
+                # plt.title('ROC Scan of '+target_label+' over '+v.latex)
+    if x_log:
+        plt.xscale('log')
+    if y_log:
+        plt.yscale('log')
+    plt.xlim(x_min, x_max)
+    plt.ylim(y_min, y_max)
+    ampl.set_xlabel(x_label)
+    ampl.set_ylabel(y_label)
+
+    plt.legend(lines, labels)
+
+    drawLabels(fig, atlas_x, atlas_y, simulation, textlist)
+
+    if plotpath != '':
+        plt.savefig(plotpath+'roc_scan_' +
+                            target_label+'_'+v.name+'.pdf')        
+    plt.show()
