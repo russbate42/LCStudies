@@ -144,7 +144,67 @@ def roc_plot(xlist, ylist, figfile = '',
     if figfile != '':
         plt.savefig(figfile)
     plt.show()
-    
+
+
+def roc_plot_scores(scores, ylabels, data, figfile='',
+             x_label='False positive rate',
+             y_label='True positive rate',
+             x_min=0, x_max=1.1, x_log=False,
+             y_min=0, y_max=1.1, y_log=False,
+             linestyles=[], colorgrouping=-1,
+             extra_lines=[], labels=[], rejection = False,
+             atlas_x=-1, atlas_y=-1, simulation=False,
+             textlist=[], title=''):
+    plt.cla()
+    plt.clf()
+
+    fig = plt.figure()
+    fig.patch.set_facecolor('white')
+    for extra_line in extra_lines:
+        plt.plot(extra_line[0], extra_line[1], linestyle='--', color='black')
+
+    colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
+
+    rocs = buildRocsScore(scores, ylabels, labels, data)
+
+    for i, roc in enumerate(rocs):
+        x = rocs[roc]['x']
+        y = rocs[roc]['y']
+        if len(linestyles) > 0:
+            linestyle = linestyles[i]
+        else:
+            linestyle = 'solid'
+        if colorgrouping > 0:
+            color = colors[int(np.floor(i / colorgrouping))]
+        else:
+            color = colors[i % (len(colors)-1)]
+        label = None
+        if len(labels) > 0:
+            label = labels[i]
+        if not rejection:
+            plt.plot(x, y, label=label, linestyle=linestyle, color=color)
+        else:
+            plt.plot(x, 1. / y, label=label, linestyle=linestyle, color=color)
+
+    if x_log:
+        plt.xscale('log')
+    if y_log:
+        plt.yscale('log')
+
+    plt.title(title)
+    plt.xlim(x_min, x_max)
+    plt.ylim(y_min, y_max)
+    ampl.set_xlabel(x_label)
+    ampl.set_ylabel(y_label)
+
+    plt.legend()
+
+    drawLabels(fig, atlas_x, atlas_y, simulation, textlist)
+
+    if figfile != '':
+        plt.savefig(figfile)
+    plt.show()
+
 def make_plot(items, figfile = '',
               xlabel = '', ylabel = '',
               x_log = False, y_log = False,
@@ -241,7 +301,7 @@ def rocScan(varlist, scan_targets, labels, ylabels, data, plotpath='',
     scan_targets: a list of neural net score datasets to use
     labels: a list of target names (strings); must be the same length as scan_targets
     '''
-
+    ampl.set_color_cycle('Oceanic', 10)
     rocs = buildRocs(varlist, scan_targets, labels, ylabels, data)
 
     for target_label in labels:
@@ -282,6 +342,20 @@ def rocScan(varlist, scan_targets, labels, ylabels, data, plotpath='',
                             target_label+'_'+v.name+'.pdf')
             plt.show()
 
+def buildRocsScore(scores, ylabels, labels, data):
+    rocs = {}
+    for score, label in zip(scores, labels):
+        x, y, t = roc_curve(
+            ylabels[data.test][:,1],
+            score[data.test],
+            drop_intermediate=False
+        )
+        rocs[label] = {'x': x, 'y': y}
+    
+    return rocs
+
+
+
 def buildRocs(varlist, scan_targets, labels, ylabels, data):
     rocs = {}
     for target, target_label in zip(scan_targets, labels):
@@ -310,7 +384,7 @@ def rejectionAtEfficiency(rocs, eff = 0.95):
         print(roc, 1/x[thresh_index])
 
 
-def rocScanSingle(varlist, scan_targets, labels, ylabels, data, plotpath='',
+def rocScanSingle(varlist, scan_targets, labels, ylabels, data, figfile = '',
             x_min=0., x_max=1.0, y_min=0.0, y_max=1.0, x_log=False, y_log=False, rejection=False,
             x_label='False positive rate', y_label='True positive rate',
             linestyles=[], colorgrouping=-1,
@@ -335,6 +409,7 @@ def rocScanSingle(varlist, scan_targets, labels, ylabels, data, plotpath='',
     fig.patch.set_facecolor('white')
     plt.plot([0, 1], [0, 1], 'k--')
 
+    ampl.set_color_cycle('Oceanic', 10)
     colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
     i = 0
@@ -385,7 +460,6 @@ def rocScanSingle(varlist, scan_targets, labels, ylabels, data, plotpath='',
 
     drawLabels(fig, atlas_x, atlas_y, simulation, textlist)
 
-    if plotpath != '':
-        plt.savefig(plotpath+'roc_scan_' +
-                            target_label+'_'+v.name+'.pdf')        
+    if figfile != '':
+        plt.savefig(figfile)        
     plt.show()

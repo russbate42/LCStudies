@@ -115,8 +115,17 @@ def splitFrameTVT(frame, trainlabel='train', trainfrac = 0.8, testlabel='test', 
     frame[testlabel]  = frame.index.isin(test_index)
     frame[vallabel]   = frame.index.isin(val_index)
 
-def setupCells(tree, layer, nrows = -1, flatten=True):
+
+def setupCells(tree, layer, nrows = -1, flatten=True, energyScale = '', energyFrame = 0):
     array = tree.array(layer)
+
+    # rescale images to the specified energy variable from the specified frame
+    # needs to reshape to n,1,1 to get the clusters, x, y shape of the array
+    # numpy handles the multiplication properly if given this shape
+    if energyScale != '':
+        energy = energyFrame[energyScale].to_numpy().reshape(len(energyFrame),1,1)
+        array = np.multiply(array, energy) # this didn't work, have to do it element by element
+
     if nrows > 0:
         array = array[:nrows]
     num_pixels = cell_meta[layer]['len_phi'] * cell_meta[layer]['len_eta']
