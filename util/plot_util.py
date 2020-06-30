@@ -96,7 +96,7 @@ def lineOverlay(xcenter, lines, labels, xlabel, ylabel, figfile = '',
 
     drawLabels(fig, atlas_x, atlas_y, simulation, textlist)
 
-    plt.legend()
+    plt.legend(prop={'size': 14}, frameon=False)
     if figfile != '':
         plt.savefig(figfile)
     plt.show()
