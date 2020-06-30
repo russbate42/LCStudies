@@ -1,5 +1,5 @@
 import numpy as np  
-from sklearn.model_selection import ShuffleSplit
+from sklearn.model_selection import ShuffleSplit, KFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import roc_curve, auc
 import uproot as ur
@@ -50,6 +50,41 @@ cell_meta = {
         'len_eta': 2
     },
 }
+
+#piyush's function
+def normImages(pcells):
+    for ptype in pcells:
+        maxCell = np.max([np.max(pcells[ptype][l]) for l in cell_meta])
+        for l in cell_meta:
+            pcells[ptype][l] = np.log10(pcells[ptype][l] / maxCell + 1e-6) + 6
+        maxCellNew = np.max([np.max(pcells[ptype][l]) for l in cell_meta])
+        print('New maxCell is {}'.format(maxCellNew))
+    
+
+def createTrainingDatasetsFolds(nfolds, data, binVariable = '', nbins = -1):
+    
+    doBinned = True
+
+    if binVariable == '' or nbins < 0:
+        doBinned = False
+    
+    if doBinned:
+        maxVariable = np.amax(data[binVariable])
+        bins = np.linspace(0, maxVariable, nbins)
+        binnedVariable = np.digitize(data[binVariable], bins)
+
+    sfold = KFold(n_splits = nfolds, shuffle=True, random_state=9)
+
+    if doBinned:    
+        splits = enumerate(sfold.split(np.zeros(len(data)), binnedVariable))
+    else:
+        splits = enumerate(sfold.split(np.zeros(len(data))))
+
+    for fold, (train, test) in splits:
+        print(fold, len(test), len(train))
+        data[str(fold)+'_train'] = data.index.isin(train)
+        data[str(fold)+'_test'] = data.index.isin(test)
+
 
 def createTrainingDatasets(categories, data, cells):
     # create train/validation/test subsets containing 70%/10%/20%
@@ -181,6 +216,30 @@ def standardCellsGeneral(array, nrows = -1):
     reshaped = scaled.reshape(shape)
     return reshaped, scaler
 
+def standardCellsScalar(array, scaler):
+    for layer in array:
+        array[layer] = scaler.transform(array[layer])
+
+# add a cleaning flag to remove empty images from the datasets
+# adapted from Piyush
+def addCleaning(frame, cells):
+    y_est = 0
+    num_clusters = len(frame)
+    for layer in cell_meta:
+        curr_sum = np.sum(cells[layer].reshape(num_clusters,-1), -1)
+        y_est = y_est + curr_sum
+
+    frame['cleanEmpty'] = y_est!=0
+    frame['cleanLeading'] = frame['clusterIndex'] == 0
+
+
+def filterCells(cells, data):
+    out = {}
+    for layer in cell_meta:
+        out[layer] = cells[layer][data.cleanEmpty]
+
+    return out
+
 
 #rescale our images to a common size
 #data should be a dictionary of numpy arrays
@@ -221,9 +280,11 @@ def rebinImages(data, target, layers = []):
         shape = data[layer].shape
         # First rebin eta up or down as needed
         if target[0] <= shape[1]:
-            out[layer] = [rebinDown(cluster, target[0], shape[1]) for cluster in data[layer]]
+            out[layer] = [rebinDown(cluster, target[0], shape[2])
+                          for cluster in data[layer]]
         elif target[0] > shape[1]:
-            out[layer] = [rebinUp(cluster, target[0], shape[1]) for cluster in data[layer]]  
+            out[layer] = [rebinUp(cluster, target[0], shape[2])
+                          for cluster in data[layer]]
             
         # Next rebin phi up or down as needed
         if target[1] <= shape[2]:
@@ -276,7 +337,7 @@ def rebinUp(a, targetEta, targetPhi):
         raise ValueError('Target eta dimension must be integer multiple of current dimension')
     phiFactor = targetPhi / shape[1]
     if phiFactor != int(phiFactor):
-        raise ValueError('Target phi dimension must be integer multiple of current dimension')
+        raise ValueError('Target phi dimension {} must be integer multiple of current dimension {}'.format(targetPhi, shape[1]))
         
     # Apply upscaling
     a = upscaleEta(a, int(etaFactor))

@@ -12,10 +12,12 @@ from . import plot_util as pu
 
 def responsePlot(x, y, figfile='', statistic='median',
                  xlabel='Cluster Calib Hits', ylabel='Cluster Energy / Calib Hits',
-                 atlas_x=-1, atlas_y=-1, simulation=False,
+                 atlas_x=-1, atlas_y=-1, simulation=False, text_color = 'black', atlas_desc = '',
+                 atlas_bbox = {},
+                 x_min = 0.1, x_max = 1000, y_min = 0, y_max = 3.,
                  textlist=[]):
     xbin = [10**exp for exp in np.arange(-1.0, 3.1, 0.1)]
-    ybin = np.arange(0., 3.1, 0.1)
+    ybin = np.arange(0., 3.1, 0.05)
     xcenter = [(xbin[i] + xbin[i+1]) / 2 for i in range(len(xbin)-1)]
     profileXMed = stats.binned_statistic(
         x, y, bins=xbin, statistic=statistic).statistic
@@ -28,7 +30,8 @@ def responsePlot(x, y, figfile='', statistic='median',
     plt.plot([0.1, 1000], [1, 1], linestyle='--', color='black')
     plt.plot(xcenter, profileXMed, color='red')
     plt.xscale('log')
-    plt.ylim(0, 3)
+    plt.xlim(x_min, x_max)
+    plt.ylim(y_min, y_max)
     pu.ampl.set_xlabel(xlabel)
     pu.ampl.set_ylabel(ylabel)
     # ampl.set_zlabel('Clusters')
@@ -36,7 +39,7 @@ def responsePlot(x, y, figfile='', statistic='median',
     cb.ax.set_ylabel('Clusters')
     # plt.legend()
 
-    pu.drawLabels(fig, atlas_x, atlas_y, simulation, textlist)
+    pu.drawLabels(fig, atlas_x, atlas_y, simulation, textlist, color = text_color, desc = atlas_desc, bbox = atlas_bbox)
 
     if figfile != '':
         plt.savefig(figfile)
@@ -56,7 +59,7 @@ def iqrOverMed(x):
     q84, q16 = np.percentile(x, [84, 16])
     iqr = q84 - q16
     med = np.median(x)
-    return iqr / med
+    return iqr / (2*med)
 
 def resolutionPlot(x, y, figfile='', statistic='std',
                    xlabel='Cluster Calib Hits', ylabel='Energy IQR over Median',

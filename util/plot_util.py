@@ -59,6 +59,12 @@ def lineOverlay(xcenter, lines, labels, xlabel, ylabel, figfile = '',
     plt.cla()
     plt.clf()
 
+    params = {'legend.fontsize': 13,
+          'axes.labelsize': 18}
+    plt.rcParams.update(params)
+
+    ampl.set_color_cycle('Oceanic',10)
+
     fig = plt.figure()
     fig.patch.set_facecolor('white')
     for extra_line in extra_lines:
@@ -75,7 +81,8 @@ def lineOverlay(xcenter, lines, labels, xlabel, ylabel, figfile = '',
             color = colors[int(np.floor(i / colorgrouping))]
         else:
             color = colors[i]
-        plt.plot(xcenter, line, label = labels[i], linestyle=linestyle,color=color)
+        plt.plot(xcenter, line, label = labels[i], linestyle=linestyle,color=color,linewidth=3)
+        del linestyle
 
     if x_log:
         plt.xscale('log')
@@ -146,6 +153,36 @@ def roc_plot(xlist, ylist, figfile = '',
     plt.show()
 
 
+def build_ratio(x1, y1, x2, y2):
+
+    if len(x1) > len(x2):
+        y = np.zeros(len(x2))
+        x = x2
+        it2 = np.nditer(x2, flags=['f_index'])
+        for xval in it2:
+            it1 = np.nditer(x1, flags=['f_index'])
+            for xval1 in it1:
+                if xval1 > xval2: # then we have just placed over it
+                    y[it2.index] = (y2[it2.index] / y1[it1.index])
+                    break
+    else:
+        y = np.zeros(len(x1))
+        x = x1
+        it1 = np.nditer(x1, flags=['f_index'])
+        for xval in it1:
+            it2 = np.nditer(x2, flags=['f_index'])
+            for xval2 in it2:
+                if xval2 > xval:
+                    y[it1.index] = (y2[it2.index] / y1[it1.index])
+                    break
+
+
+
+    return x, y
+    
+
+
+
 def roc_plot_scores(scores, ylabels, data, figfile='',
              x_label='False positive rate',
              y_label='True positive rate',
@@ -160,6 +197,7 @@ def roc_plot_scores(scores, ylabels, data, figfile='',
 
     fig = plt.figure()
     fig.patch.set_facecolor('white')
+    # plt.subplot(411)
     for extra_line in extra_lines:
         plt.plot(extra_line[0], extra_line[1], linestyle='--', color='black')
 
@@ -167,9 +205,15 @@ def roc_plot_scores(scores, ylabels, data, figfile='',
 
     rocs = buildRocsScore(scores, ylabels, labels, data)
 
+
+    ratxs = {}
+    ratys = {}
     for i, roc in enumerate(rocs):
         x = rocs[roc]['x']
         y = rocs[roc]['y']
+        # ratx, raty = build_ratio(rocs['$\mathcal{P}^{EM}_{clus}$']['x'], rocs['$\mathcal{P}^{EM}_{clus}$']['y'], x, y)
+        # ratxs[i] = ratx
+        # ratys[i] = raty
         if len(linestyles) > 0:
             linestyle = linestyles[i]
         else:
@@ -182,9 +226,9 @@ def roc_plot_scores(scores, ylabels, data, figfile='',
         if len(labels) > 0:
             label = labels[i]
         if not rejection:
-            plt.plot(x, y, label=label, linestyle=linestyle, color=color)
+            plt.plot(x, y, label=label, linestyle=linestyle, color=color, linewidth=3)
         else:
-            plt.plot(x, 1. / y, label=label, linestyle=linestyle, color=color)
+            plt.plot(x, 1. / y, label=label, linestyle=linestyle, color=color, linewidth=3)
 
     if x_log:
         plt.xscale('log')
@@ -200,6 +244,10 @@ def roc_plot_scores(scores, ylabels, data, figfile='',
     plt.legend()
 
     drawLabels(fig, atlas_x, atlas_y, simulation, textlist)
+
+    # plt.subplot(414)
+    # for x, y in zip(ratxs, ratys):
+        # plt.plot(x, y)
 
     if figfile != '':
         plt.savefig(figfile)
@@ -236,14 +284,17 @@ def make_plot(items, figfile = '',
     plt.show()
     
 def drawLabels(fig, atlas_x=-1, atlas_y=-1, simulation=False,
-               textlist=[]):
+               textlist=[],color='black', desc='', bbox = {}):
     if atlas_x >= 0 and atlas_y >= 0:
-        ampl.draw_atlas_label(atlas_x, atlas_y, simulation=simulation, fontsize=18)
+        if len(bbox) > 0:
+            ampl.draw_atlas_label(atlas_x, atlas_y, simulation=simulation, fontsize=18, color=color, bbox=bbox, desc=desc)
+        else:
+            ampl.draw_atlas_label(atlas_x, atlas_y, simulation=simulation, fontsize=18, color=color, desc=desc)
 
     for textdict in textlist:
         fig.axes[0].text(
             textdict['x'], textdict['y'], textdict['text'], 
-            transform=fig.axes[0].transAxes, fontsize=18)
+            transform=fig.axes[0].transAxes, fontsize=18,color=color)
 
 
 display_digits = 2
@@ -433,9 +484,9 @@ def rocScanSingle(varlist, scan_targets, labels, ylabels, data, figfile = '',
                 y = rocs[target_label+label]['y']
                 if not rejection:
 
-                    line, = plt.plot(x, y, linestyle=linestyle, color = color)
+                    line, = plt.plot(x, y, linestyle=linestyle, color = color, linewidth=3)
                 else:
-                    line, = plt.plot(y, 1. / x, linestyle=linestyle, color=color)
+                    line, = plt.plot(y, 1. / x, linestyle=linestyle, color=color,linewidth=3)
                 
                 if i < len(v.labels):
                     lines.append(line)
