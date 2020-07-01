@@ -17,7 +17,7 @@ def responsePlot(x, y, figfile='', statistic='median',
                  x_min = 0.1, x_max = 1000, y_min = 0, y_max = 3.,
                  textlist=[]):
     xbin = [10**exp for exp in np.arange(-1.0, 3.1, 0.1)]
-    ybin = np.arange(0., 3.1, 0.05)
+    ybin = np.arange(0., 3.1, 0.025)
     xcenter = [(xbin[i] + xbin[i+1]) / 2 for i in range(len(xbin)-1)]
     profileXMed = stats.binned_statistic(
         x, y, bins=xbin, statistic=statistic).statistic
