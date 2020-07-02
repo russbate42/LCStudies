@@ -22,11 +22,14 @@ def responsePlot(x, y, figfile='', statistic='median',
     profileXMed = stats.binned_statistic(
         x, y, bins=xbin, statistic=statistic).statistic
 
+    # to normalize, make a list as long as the number of clusters, which is 1 / number of clusters
+    weights = np.ones(len(y)) / len(y)
+
     plt.cla()
     plt.clf()
     fig = plt.figure()
     fig.patch.set_facecolor('white')
-    plt.hist2d(x, y, bins=[xbin, ybin], norm=LogNorm(),zorder = -1)
+    plt.hist2d(x, y, weights=weights, bins=[xbin, ybin], norm=LogNorm(),zorder = -1)
     plt.plot([0.1, 1000], [1, 1], linestyle='--', color='black')
     plt.plot(xcenter, profileXMed, color='red')
     plt.xscale('log')
@@ -36,7 +39,7 @@ def responsePlot(x, y, figfile='', statistic='median',
     pu.ampl.set_ylabel(ylabel)
     # ampl.set_zlabel('Clusters')
     cb = plt.colorbar()
-    cb.ax.set_ylabel('Clusters')
+    cb.ax.set_ylabel('Fraction of Clusters')
     # plt.legend()
 
     pu.drawLabels(fig, atlas_x, atlas_y, simulation, textlist, color = text_color, desc = atlas_desc, bbox = atlas_bbox)
