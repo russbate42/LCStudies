@@ -12,7 +12,7 @@ from . import plot_util as pu
 
 def responsePlot(x, y, figfile='', statistic='median',
                  xlabel='Cluster Calib Hits', ylabel='Cluster Energy / Calib Hits',
-                 atlas_x=-1, atlas_y=-1, simulation=False, text_color = 'black', atlas_desc = '',
+                 atlas_x=-1, atlas_y=-1, simulation=False, atlas_status = 'Internal', text_color = 'black', atlas_desc = '',
                  atlas_bbox = {},
                  x_min = 0.1, x_max = 1000, y_min = 0, y_max = 3.,
                  textlist=[]):
@@ -42,7 +42,7 @@ def responsePlot(x, y, figfile='', statistic='median',
     cb.ax.set_ylabel('Fraction of Clusters')
     # plt.legend()
 
-    pu.drawLabels(fig, atlas_x, atlas_y, simulation, textlist, color = text_color, desc = atlas_desc, bbox = atlas_bbox)
+    pu.drawLabels(fig, atlas_x, atlas_y, simulation, textlist, atlas_status = atlas_status, color = text_color, desc = atlas_desc, bbox = atlas_bbox)
 
     if figfile != '':
         plt.savefig(figfile)

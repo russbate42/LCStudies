@@ -55,7 +55,7 @@ def lineOverlayManyX(x, lines, labels, xlabel, ylabel, figfile = '',
                     x_min = 0.1, x_max = 1000, x_log = True, y_min = 0, y_max = 2, y_log = False,
                     linestyles=[], colorgrouping=-1,
                     extra_lines = [],
-                    atlas_x=-1, atlas_y=-1, simulation=False,
+                    atlas_x=-1, atlas_y=-1, simulation=False, atlas_status = 'Internal',
                     textlist=[]):
     plt.cla()
     plt.clf()
@@ -97,7 +97,7 @@ def lineOverlayManyX(x, lines, labels, xlabel, ylabel, figfile = '',
     ampl.set_xlabel(xlabel)
     ampl.set_ylabel(ylabel)
 
-    drawLabels(fig, atlas_x, atlas_y, simulation, textlist)
+    drawLabels(fig, atlas_x, atlas_y, simulation, textlist, atlas_status = atlas_status)
 
     plt.legend(prop={'size': 14}, frameon=False)
     if figfile != '':
@@ -108,7 +108,7 @@ def lineOverlay(xcenter, lines, labels, xlabel, ylabel, figfile = '',
                     x_min = 0.1, x_max = 1000, x_log = True, y_min = 0, y_max = 2, y_log = False,
                     linestyles=[], colorgrouping=-1,
                     extra_lines = [],
-                    atlas_x=-1, atlas_y=-1, simulation=False,
+                    atlas_x=-1, atlas_y=-1, simulation=False, atlas_status = 'Internal',
                     textlist=[]):
     plt.cla()
     plt.clf()
@@ -148,7 +148,7 @@ def lineOverlay(xcenter, lines, labels, xlabel, ylabel, figfile = '',
     ampl.set_xlabel(xlabel)
     ampl.set_ylabel(ylabel)
 
-    drawLabels(fig, atlas_x, atlas_y, simulation, textlist)
+    drawLabels(fig, atlas_x, atlas_y, simulation, textlist, atlas_status=atlas_status)
 
     plt.legend(prop={'size': 14}, frameon=False)
     if figfile != '':
@@ -229,7 +229,7 @@ def roc_plot_scores(scores, ylabels, data, figfile='',
              y_min=0, y_max=1.1, y_log=False,
              linestyles=[], colorgrouping=-1,
              extra_lines=[], labels=[], rejection = False,
-             atlas_x=-1, atlas_y=-1, simulation=False,
+             atlas_x=-1, atlas_y=-1, simulation=False, atlas_status = 'Internal',
              textlist=[], title=''):
     plt.cla()
     plt.clf()
@@ -279,7 +279,7 @@ def roc_plot_scores(scores, ylabels, data, figfile='',
         ax1.set_yscale('log')
         ax2.set_yscale('linear')
 
-    drawLabels(fig, atlas_x, atlas_y, simulation, textlist, ax = ax1)
+    drawLabels(fig, atlas_x, atlas_y, simulation, textlist, ax = ax1, atlas_status = atlas_status)
     ax1.legend(prop={'size': 14}, frameon=False)
 
     ax2.set_ylim(0, 15)
@@ -340,12 +340,12 @@ def make_plot(items, figfile = '',
     plt.show()
     
 def drawLabels(fig, atlas_x=-1, atlas_y=-1, simulation=False, 
-               textlist=[],color='black', desc='', bbox = {}, ax = None):
+               textlist=[],color='black', desc='', bbox = {}, ax = None, atlas_status='Internal'):
     if atlas_x >= 0 and atlas_y >= 0:
         if len(bbox) > 0:
-            ampl.draw_atlas_label(atlas_x, atlas_y, ax = ax, simulation=simulation, fontsize=18, color=color, bbox=bbox, desc=desc)
+            ampl.draw_atlas_label(atlas_x, atlas_y, status = atlas_status, ax = ax, simulation=simulation, fontsize=18, color=color, bbox=bbox, desc=desc)
         else:
-            ampl.draw_atlas_label(atlas_x, atlas_y, ax = ax, simulation=simulation, fontsize=18, color=color, desc=desc)
+            ampl.draw_atlas_label(atlas_x, atlas_y, status = atlas_status, ax = ax, simulation=simulation, fontsize=18, color=color, desc=desc)
 
     for textdict in textlist:
         fig.axes[0].text(
