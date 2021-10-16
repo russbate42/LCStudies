@@ -35,3 +35,8 @@ TODO
 ## Energy regression
 
 Coming soon...
+
+## Point Cloud Approach
+This is a new approach which uses a set of points in space which represent calorimeter hits or tracks. In the case of deep sets or otherwise, these points have some number of attributes. For the deep set energy regression notebooks this set of attributes is [Cell Energy, Eta, Phi, rPerp, track flag]. An additional calorimeter sample layer number is added at the end for bookkeeping purposes and is not used in the training. The numbers are 1,2,3,12,13,14 for EMB1 -> TileBar2 respectively.
+
+#### Instructions to run scripts to create data:
